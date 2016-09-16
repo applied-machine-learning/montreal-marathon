@@ -1,0 +1,58 @@
+<h1>Data Collection Procedure</h1>
+
+<h2>Source</h2>
+
+<p>The data was scraped from <a href="https://www.sportstats.ca/">SportStats</a>. You can search for a person by querying on their first-name and last-name. For example, if you query for John Doe, you should expect the results to be <a href="https://www.sportstats.ca/search-results.xhtml?query=john%20doe&amp;companies=[1,2,9,8]">this</a></p>
+
+<p>As you can see, sportstats only tracks result based on first-name and last-name combination.</p>
+
+<h2>Inclusion Criteria</h2>
+
+<p>You have the list of people who participated in the last 4 Montreal Oasis Marathons. Note that you don't have all the participants. Out of the 9314 unique participants the data set only contains information about 8751 participants.</p>
+
+<h2>Features</h2>
+
+<h3>PARTICIPANT_ID</h3>
+
+<p>The participant's name is replaced with the uniqued ID which is denoted by this feature.</p>
+
+<h3>EVENT_NAME</h3>
+
+<p>The name of the event in which the participant took part in.</p>
+
+<h3>EVENT_TYPE</h3>
+
+<p>The type of event : Marathon, Demi-marathon, Ironman, etc</p>
+
+<h3>TIME</h3>
+
+<p>Recorded time it took the participant to complete the event. -1 denotes either the participant didn't complete the event or there was no recorded data of that.</p>
+
+<h3>CATEGORY</h3>
+
+<p>The category the participant took part it, for example, "M 20-25" denotes that the sex of the participant is male and the age category he took part in was 20-25. Note that the data isn't sanitised so there can be identical forms of a single category, for example: "M 25-29", "M25-29", "M 25 to 29", "Hommes 25-29" etc. should all map to one single category.</p>
+
+<h2>Getting data for a person</h2>
+
+<p>"fetch_history.py" can be used as a sample script for scraping the past event history of a person from sportstats. If you don't have python and want to do scientific computing with Python, I advise you to go with the <a href="https://www.continuum.io/downloads">Anaconda</a> Python distribution. It will save you (and the SOCS sysadmins) a great deal of time. </p>
+
+<p>If you have python you'll need the following packages for running the script. I suggest using pip to install the packages. If you don't have pip you can install it by following instructions <a href="https://pip.pypa.io/en/stable/installing/">here</a>.</p>
+
+<p>Once you have pip you can install <a href="http://selenium-python.readthedocs.io/installation.html">Selenium</a> by simply </p>
+
+<p><code>
+pip install selenium
+</code></p>
+
+<h4><strong>Note:</strong> This is just one of the many ways to scrap the data. Feel free to chose the one which suits you best.</h4>
+
+<p>If you want to use fetch_history.py follow these intsructions: </p>
+
+<p>The script fetches the past history of a person from sportstats and dumps them into a csv. </p>
+
+<p><strong>Input</strong>: It takes input the first-name and last-name of the person, and the name of the file to dump data in. </p>
+
+<p><strong>Usage</strong>: <code>python fetch_data.py &lt;first-name&gt; &lt;last-name&gt; &lt;save-file-name&gt;</code></p>
+
+<p><em>Eg</em>: <code>python fetch_data.py john doe john_doe_history</code></p>
+
