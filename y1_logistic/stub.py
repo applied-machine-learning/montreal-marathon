@@ -3,7 +3,9 @@
 from sklearn import datasets
 import numpy as np
 import math
+from crossValidation import CrossValidation
 
+K = 7
 
 #returns sigmoid function which is the hypothesis for logistic regression
 def sigmoid(theta, x):
@@ -57,7 +59,7 @@ def predict_output(theta, X, prob_threshold = 0.5):
     return pred_output
 
 
-# TODO: Implement 7-fold cross validation
+# Linear regression with k-fold cross validation
 def main():
 
     ################## SAMPLE DATA TO TEST, NEEDS TO BE REPLACED WITH OUR OWN #############################
@@ -82,14 +84,51 @@ def main():
     shape = X.shape[1]
     thetas = np.zeros(shape)
 
-    #Get the final thetas
-    opt_theta = gradient_descent(thetas, X, y)
-    print(opt_theta)
 
-    #Make a prediction 
-    y_pred = predict_output(opt_theta, X)
-    print y_pred
+    #Split the sets for cross validation
+    cv = CrossValidation(K,X,y)
+    partitioned_x, partitioned_y = cv.get_partitioned_data()
 
-    print np.sum(y == y_pred)
+    #Perform K-fold cross validation on partitioned data
 
+    for i in range(K):
+        #Get the validation set ouputs and inputs
+        x_validation = partitioned_x[i]
+        y_validation = partitioned_y[i]
+        #Determine the size of the np object
+        # num_cols_x, num_cols_y , num_rows_x, num_rows_y = 0
+        # for s in range(7):
+        #     if j!=i:
+        #         num_cols_x += partitioned_x[s].shape[1]
+        #         num_rows_x += partitioned_x[s].shape[0]
+        #         num_cols_y += partitioned_y[s].shape[1]
+        #         num_rows_y += partitioned_y[s].shape[0]
+        #Get the training set features
+        y_training = np.empty(shape = (0, 0))
+        x_training = np.empty(shape = (0, 0))
+        for j in range(K):
+            if j != i:
+                x_training = np.append(x_training, partitioned_x[j])
+                y_training = np.append(y_training, partitioned_y[j])
+
+        x_training = np.reshape(x_training, ( y_training.shape[0], 3))
+        # print "shape of x_validation" + str(x_validation.shape)
+        # print "shape of y_validation" + str(y_validation.shape)
+        # print "shape of x_training" + str(x_training.shape)
+        # print "shape of y_training" + str(y_training.shape)
+        #Get the final thetas from training set
+        opt_theta = gradient_descent(thetas, x_training, y_training)
+        print(opt_theta)
+
+        #Make a prediction for training set 
+        y_pred = predict_output(opt_theta, x_training)
+        print y_pred
+
+        print "Success rate training " + str(np.sum(y_training == y_pred)/float(y_training.size))
+
+        #Make a prediction for validation set
+        y_pred = predict_output(opt_theta, x_validation)
+        print y_pred
+
+        print "Success rate testing " + str(np.sum(y_validation == y_pred)/float(y_validation.size))
 main()
