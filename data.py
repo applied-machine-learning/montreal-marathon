@@ -78,7 +78,7 @@ def makeParticipant(partID, eventList):
             averageTime(eventsExceptYear(filterByEvent(eventList, Events.marathon), 2012))
 
     dat[Headers.participatedIn2015FullMM] = \
-            len(filterByName(filterByEvent(eventsInYear(eventList, 2015), Events.marathon), Names.montrealMarathon)
+            len(filterByName(filterByEvent(eventsInYear(eventList, 2015), Events.marathon), Names.montrealMarathon))
 
     return Participant(partID, dat)
 
