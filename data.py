@@ -27,13 +27,13 @@ Important:
 [x] average_non_2015_marathon_time
 [x] average_non_2012_marathon_time
 
-[ ] number_of_full_mm
-[ ] number_of_non_2015_full_mm
-[ ] number_of_non_2012_full_mm
+[x] number_of_full_mm
+[x] number_of_non_2015_full_mm
+[x] number_of_non_2012_full_mm
 
-[ ] average_full_mm_time
-[ ] average_non_2015_full_mm_time
-[ ] average_non_2012_full_mm_time
+[x] average_full_mm_time
+[x] average_non_2015_full_mm_time
+[x] average_non_2012_full_mm_time
 
 [x] participated_in_2015_full_mm
 
@@ -79,6 +79,16 @@ def makeParticipant(partID, eventList):
 
     dat[Headers.participatedIn2015FullMM] = \
             len(filterByName(filterByEvent(eventsInYear(eventList, 2015), Events.marathon), Names.montrealMarathon))
+
+    fullMMs = filterByName(filterByEvent(eventList, Events.marathon), Names.montrealMarathon)
+
+    dat[Headers.numberOfFullMMs] = len(fullMMs)
+    dat[Headers.numberOfNon2015FullMMs] = len(eventsExceptYear(fullMMs, 2015))
+    dat[Headers.numberOfNon2012FullMMs] = len(eventsExceptYear(fullMMs, 2012))
+
+    dat[Headers.averageFullMMTime] = averageTime(fullMMs)
+    dat[Headers.averageNon2015FullMMTime] = averageTime(eventsExceptYear(fullMMs, 2015))
+    dat[Headers.averageNon2012FullMMTime] = averageTime(eventsExceptYear(fullMMs, 2012))
 
     return Participant(partID, dat)
 
@@ -160,5 +170,5 @@ if __name__ == "__main__":
     dataset = MarathonDataset(raw)
     for k, v in dataset.getAllData().iteritems():
         v.prettyPrint()
-    d = dataset.request([Headers.ID, Headers.gender, Headers.age, Headers.totalEvents, Headers.participatedIn2015FullMM])
+    d = dataset.request([Headers.ID, Headers.gender, Headers.age, Headers.totalEvents, Headers.participatedIn2015FullMM, Headers.averageMarathonTime, Headers.averageNon2015MarathonTime, Headers.numberOfFullMMs, Headers.numberOfNon2015FullMMs, Headers.averageFullMMTime, Headers.averageNon2015FullMMTime])
     print d
