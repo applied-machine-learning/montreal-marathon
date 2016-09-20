@@ -1,5 +1,5 @@
 import csv
-import re
+from utils import *
 
 '''
 Form of raw event:
@@ -18,17 +18,14 @@ Important:
 [x] age 
 
 [x] number_of_total_events
-[ ] rate_of_all_event_completion
-[ ] rate_of_all_marathon_completion
-[ ] rate_of_full_mm_completion
 
 [x] number_of_marathons
-[ ] number_of_non_2015_marathons
-[ ] number_of_non_2012_marathons
+[x] number_of_non_2015_marathons
+[x] number_of_non_2012_marathons
 
-[ ] average_marathon_time
-[ ] average_non_2015_marathon_time
-[ ] average_non_2012_marathon_time
+[x] average_marathon_time
+[x] average_non_2015_marathon_time
+[x] average_non_2012_marathon_time
 
 [ ] number_of_full_mm
 [ ] number_of_non_2015_full_mm
@@ -49,41 +46,40 @@ Unimportant:
 [ ] number_of_misc_long_events
 
 '''
-class Gender:
-    M = 1
-    F = 0
 
-class Headers:
-    ID = "participant_id"
-    gender = "gender"
-    age = "age"
-    total_events = "number_of_total_events"
+# Input : list of events, all lowercase
+# Output : Participant object, all fields are numerical
+def makeParticipant(partID, eventList):
+    dat = dict()
 
-    # All marathons
-    number_of_marathons = "number_of_marathons"
-    number_of_non_2015_marathons = "number_of_non_2015_marathons"
-    number_of_non_2012_marathons = "number_of_non_2012_marathons"
+    dat[Headers.ID] = partID
+    dat[Headers.gender] = getGender(eventList)
+    dat[Headers.age] = getAge(eventList)
+    dat[Headers.totalEvents] = len(eventList)
+    dat[Headers.numberOfMarathons] = len(filterByEvent(eventList, Events.marathon))
 
-    # All marathon times
-    average_marathon_time = "average_marathon_time"
-    average_non_2015_marathon_time = "average_non_2015_marathon_time"
-    average_non_2012_marathon_time = "average_non_2012_marathon_time"
+    dat[Headers.numberOfNon2015Marathons] = \
+            len(
+                filterByEvent(
+                    eventsExceptYear(eventList, 2015),
+                    Events.marathon))
 
-    # All Montreal Marathons (only Marathon event type)
-    number_of_full_mms = "number_of_full_mms"
-    number_of_non_2015_full_mms = "number_of_non_2015_full_mms"
-    number_of_non_2012_full_mms = "number_of_non_2012_full_mms"
+    dat[Headers.numberOfNon2012Marathons] = \
+            len(
+                filterByEvent(
+                    eventsExceptYear(eventList, 2012),
+                    Events.marathon))
 
-    # All Montreal Marathons times (only Marathon event type)
-    average_full_mm_time = "average_full_mm_time"
-    average_non_2015_full_mm_time = "average_non_2015_full_mm_time"
-    average_non_2012_full_mm_time = "average_non_2012_full_mm_time"
+    dat[Headers.averageMarathonTime] = \
+            averageTime(filterByEvent(eventList, Events.marathon))
+    dat[Headers.averageNon2015MarathonTime] = \
+            averageTime(eventsExceptYear(filterByEvent(eventList, Events.marathon), 2015))
+    dat[Headers.averageNon2012MarathonTime] = \
+            averageTime(eventsExceptYear(filterByEvent(eventList, Events.marathon), 2012))
 
-    # Binary, whether participated in 2015 MM (only Marathon event type)
-    participated_in_2015_full_mm = "participated_in_2015_full_mm"
+    return Participant(partID, dat)
 
 class Participant:
-    # self.data = 
     #     dictionary mapping column header to field (all fields are floats).
     def __init__(self, partID, dataDict):
         self.data = dataDict
@@ -92,7 +88,7 @@ class Participant:
     def getField(self, header):
         field = self.data[header]
         if field == None:
-            raise TypeError("Value %s not found in participant." % (field,))
+            raise TypeError("Value with header %s not found in participant." % (field,))
 
     def getAllFields(self):
         return self.data.values()
@@ -140,68 +136,6 @@ def parseRaw(rawEntries):
         i += 1
 
     return dataset
-
-# Input : list of events, all lowercase
-# Output : Participant object, all fields are numerical
-def makeParticipant(partID, eventList):
-    dat = {}
-
-    dat[Headers.ID] = partID
-    dat[Headers.gender] = getGender(eventList)
-    dat[Headers.age] = getAge(eventList)
-    dat[Headers.total_events] = len(eventList)
-    dat[Headers.number_of_marathons] = numMarathons(eventList)
-
-    return Participant(partID, dat)
-
-# Input : list of events, all lowercase
-# Return : number of total marathons as int
-def numMarathons(eventList):
-    categories = [i[2] for i in eventList]
-    stripped = map(str.strip, categories)
-    # TODO: account for other ways of defining a marathon
-    print stripped
-    return stripped.count("marathon")
-
-# Input : list of events, all lowercase
-# Return : an Age as float
-def getAge(eventList):
-    categories = [i[4] for i in eventList]
-    ages = []
-    for cat in categories:
-        l = re.findall(r'\d+', cat)
-        ages.extend(l)
-    parsedAges = map(int, ages)
-    return mean(parsedAges)
-
-def mean(l):
-    size = len(l)
-    if size == 0:
-        return 0
-    return sum(l) / size
-
-# Input : list of events
-# Return : A Gender as 1 or 0
-def getGender(eventList):
-    categories = [i[4] for i in eventList]
-    for cat in categories:
-        if cat == "":
-            pass
-        elif cat[0] == "m" or cat[0] == "h" or cat[0] == "g":
-            return Gender.M
-        elif cat[0] == "f":
-            return Gender.F
-        else:
-            print "Odd gender: %s." % cat
-            pass
-    print "Could not specify gender for given list of events: %s. " + \
-        "Proceeding with Male."
-    return Gender.M
-
-# Convenience function for partitioning list of events.
-def toEventList(rawEventList):
-    evs = map(str.strip, map(str.lower, rawEventList))
-    return [evs[i:i+5] for i in xrange(0, len(rawEventList), 5)]
 
 if __name__ == "__main__":
     # Load raw data as list
