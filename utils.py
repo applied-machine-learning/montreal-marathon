@@ -14,6 +14,9 @@ class BetterDict(dict):
     def __getitem__(self, k):
         return vars(self)[k]
 
+Names = BetterDict()
+Names.montrealMarathon = ["montreal", "oasis", "marathon"]
+
 Headers = BetterDict()
 Headers.ID = "participant_id"
 Headers.gender = "gender"
@@ -120,6 +123,9 @@ def inYear(y, event):
 def eventsExceptYear(rawEventList, year):
     return [e for e in rawEventList if not inYear(year, e)]
 
+def eventsInYear(rawEventList, year):
+    return [e for e in rawEventList if inYear(year, e)]
+
 # Input : raw list of events, event type
 # Return : list of events by that event
 def filterByEvent(raw, eventType):
@@ -131,3 +137,24 @@ def filterByEvent(raw, eventType):
 def averageTime(raw):
     times = [e.time for e in raw if e.time != None]
     return mean(times)
+
+# Input: event
+# Output: list of words in the event name
+def eventWords(ev):
+    return re.findall(r"[a-z0-9]+", ev.name)
+
+def match(names, event):
+    words = eventWords(event)
+    for name in names:
+        if not name in words:
+            return False
+    return True
+
+# Input : list of events, name of event
+# Return : list of events that have that name
+def filterByName(evs, name):
+    candidates = []
+    for ev in evs:
+        if match(name, ev):
+            candidates.append(ev)
+    return candidates

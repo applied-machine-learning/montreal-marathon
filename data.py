@@ -77,6 +77,9 @@ def makeParticipant(partID, eventList):
     dat[Headers.averageNon2012MarathonTime] = \
             averageTime(eventsExceptYear(filterByEvent(eventList, Events.marathon), 2012))
 
+    dat[Headers.participatedIn2015FullMM] = \
+            len(filterByName(filterByEvent(eventsInYear(eventList, 2015), Events.marathon), Names.montrealMarathon))
+
     return Participant(partID, dat)
 
 class Participant:
@@ -157,5 +160,5 @@ if __name__ == "__main__":
     dataset = MarathonDataset(raw)
     for k, v in dataset.getAllData().iteritems():
         v.prettyPrint()
-    d = dataset.request([Headers.ID, Headers.gender, Headers.age, Headers.totalEvents])
+    d = dataset.request([Headers.ID, Headers.gender, Headers.age, Headers.totalEvents, Headers.participatedIn2015FullMM])
     print d
