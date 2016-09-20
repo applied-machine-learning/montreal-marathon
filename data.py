@@ -88,7 +88,10 @@ class Participant:
     def getField(self, header):
         field = self.data[header]
         if field == None:
+            print "oops"
             raise TypeError("Value with header %s not found in participant." % (field,))
+        else:
+            return field
 
     def getAllFields(self):
         return self.data.values()
@@ -112,9 +115,20 @@ class MarathonDataset:
     def getAllData(self):
         return self.data
 
-    # Returns a matrix containing fields requested.
+    # Returns a matrix containing fields requested,
+    # in the order requested.
+    # To index: matrix[0][1] will return the element
+    # in the 0th row, and the 1st column
     def request(self, fields):
-        return NotImplemented
+        matrix = []
+        for field in fields:
+            assert field in Headers.values()
+        for id, participant in self.data.iteritems():
+            row = []
+            for field in fields:
+                row.append(participant.getField(field))
+            matrix.append(row)
+        return matrix
 
 # Note: returned list only contains strings because CSV.
 def loadCSV(filename):
@@ -129,7 +143,7 @@ def parseRaw(rawEntries):
     i = 1
     while i < len(rawEntries):
         row = rawEntries[i]
-        partID = row[0]
+        partID = int(row[0])
         ungroupedEvents = row[1:]
         events = toEventList(ungroupedEvents)
         dataset[partID] = makeParticipant(partID, events)
@@ -143,3 +157,5 @@ if __name__ == "__main__":
     dataset = MarathonDataset(raw)
     for k, v in dataset.getAllData().iteritems():
         v.prettyPrint()
+    d = dataset.request([Headers.ID, Headers.gender, Headers.age, Headers.totalEvents])
+    print d

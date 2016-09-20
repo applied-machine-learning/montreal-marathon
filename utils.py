@@ -7,7 +7,12 @@ Form of raw event:
 '''
 
 class BetterDict(dict):
-    pass
+    def values(self):
+        return vars(self).values()
+    def keys(self):
+        return vars(self).keys()
+    def __getitem__(self, k):
+        return vars(self)[k]
 
 Headers = BetterDict()
 Headers.ID = "participant_id"
@@ -68,14 +73,14 @@ def getAge(eventList):
     for cat in categories:
         l = re.findall(r'\d+', cat)
         ages.extend(l)
-    parsedAges = map(int, ages)
+    parsedAges = map(float, ages)
     return mean(parsedAges)
 
 def mean(l):
     size = len(l)
     if size == 0:
         return 0
-    return sum(l) / size
+    return sum(l) // size
 
 # Input : list of events
 # Return : A Gender as 1 or 0
@@ -118,6 +123,7 @@ def eventsExceptYear(rawEventList, year):
 # Input : raw list of events, event type
 # Return : list of events by that event
 def filterByEvent(raw, eventType):
+    assert eventType in Events.values()
     return [e for e in raw if e.type == eventType]
 
 # Input : list of events, year to exclude. May have failed events.
