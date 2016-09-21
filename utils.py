@@ -42,6 +42,7 @@ Headers.averageNon2012FullMMTime = "average_non_2012_full_mm_time"
 # Binary, whether participated in 2015 MM (only Marathon event type)
 Headers.participatedIn2015FullMM = "participated_in_2015_full_mm"
 Headers.logNon2015MarathonRatio = "log_non_2015_marathon_ratio"
+Headers.MM2015Time = "montrealMarathon2015Time"
 
 Events = BetterDict()
 Events.marathon = "marathon"
@@ -160,3 +161,15 @@ def filterByName(evs, name):
         if match(name, ev):
             candidates.append(ev)
     return candidates
+
+# Input : name of ev, type of ev, year of ev, and list of events
+# Returns: time of event if it exists. None if it doesn't
+def getTime(name, type, year, eventList):
+    evs = filterByEvent(filterByName(eventsInYear(eventList, year), name), type)
+    if len(evs) <= 0:
+        return 0 # or really high num?
+    else:
+        t = evs[0].time
+        if t == None:
+            return 0
+        return t

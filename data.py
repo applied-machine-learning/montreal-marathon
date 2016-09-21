@@ -36,6 +36,12 @@ Important:
 [x] average_non_2012_full_mm_time
 
 [x] participated_in_2015_full_mm
+[x] participated_in_2014_full_mm
+[x] participated_in_2013_full_mm
+[x] participated_in_2012_full_mm
+
+[x] mm_2015_time
+[x] logNon2015MarathonRatio
 
 Unimportant:
 [ ] number_of_half-marathons
@@ -79,6 +85,12 @@ def makeParticipant(partID, eventList):
 
     dat[Headers.participatedIn2015FullMM] = \
             len(filterByName(filterByEvent(eventsInYear(eventList, 2015), Events.marathon), Names.montrealMarathon))
+    dat[Headers.participatedIn2014FullMM] = \
+            len(filterByName(filterByEvent(eventsInYear(eventList, 2014), Events.marathon), Names.montrealMarathon))
+    dat[Headers.participatedIn2013FullMM] = \
+            len(filterByName(filterByEvent(eventsInYear(eventList, 2013), Events.marathon), Names.montrealMarathon))
+    dat[Headers.participatedIn2012FullMM] = \
+            len(filterByName(filterByEvent(eventsInYear(eventList, 2012), Events.marathon), Names.montrealMarathon))
 
     fullMMs = filterByName(filterByEvent(eventList, Events.marathon), Names.montrealMarathon)
 
@@ -94,6 +106,8 @@ def makeParticipant(partID, eventList):
         dat[Headers.logNon2015MarathonRatio] = 0
     else:
         dat[Headers.logNon2015MarathonRatio] = math.log(dat[Headers.numberOfNon2015Marathons] / dat[Headers.averageNon2015MarathonTime])
+
+    dat[Headers.MM2015Time] = getTime(Names.montrealMarathon, Events.marathon, 2015, eventList)
 
     return Participant(partID, dat)
 
