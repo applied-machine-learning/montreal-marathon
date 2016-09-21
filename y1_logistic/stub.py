@@ -4,6 +4,9 @@ from sklearn import datasets
 import numpy as np
 import math
 from crossValidation import CrossValidation
+from data import loadCSV
+from data import MarathonDataset
+from utils import *
 
 K = 7
 
@@ -59,14 +62,34 @@ def predict_output(theta, X, prob_threshold = 0.5):
     return pred_output
 
 
+def getData():
+
+    raw = loadCSV("../raw_data/Project1_data.csv")
+    mdata = MarathonDataset(raw)
+    listOutputs = ["participated_in_2015_full_mm"]
+    listInputs = ["number_of_non_2015_marathons", Headers.averageNon2015MarathonTime]
+    y = mdata.request(listOutputs)
+    X = mdata.request(listInputs)
+
+    for i in range (len(X[0])):
+        if X[i][0] == 0:
+            X[i][1] = 100000000
+    return X,y
+
+
 # Linear regression with k-fold cross validation
 def main():
 
     ################## SAMPLE DATA TO TEST, NEEDS TO BE REPLACED WITH OUR OWN #############################
-    data = datasets.load_iris()
-    X = data.data[:100, :2]
-    y = data.target[:100]
+    #data = datasets.load_iris()
+    #X = data.data[:100, :2]
+    #y = data.target[:100]
     #######################################################################################################
+    X,y = getData();
+    ###convert list to numpty array
+    X = np.asarray(X);
+    y = np.asarray(y);
+
     #Ensure Data is what you want
     print X.shape
     print X
@@ -91,6 +114,10 @@ def main():
 
     #Perform K-fold cross validation on partitioned data
 
+    trainingScore = []
+    validationScore = []
+    optimalThetas = []
+
     for i in range(K):
         #Get the validation set ouputs and inputs
         x_validation = partitioned_x[i]
@@ -111,7 +138,7 @@ def main():
                 x_training = np.append(x_training, partitioned_x[j])
                 y_training = np.append(y_training, partitioned_y[j])
 
-        x_training = np.reshape(x_training, ( y_training.shape[0], 3))
+        x_training = np.reshape(x_training, ( y_training.shape[0], X.shape[1]))
         # print "shape of x_validation" + str(x_validation.shape)
         # print "shape of y_validation" + str(y_validation.shape)
         # print "shape of x_training" + str(x_training.shape)
@@ -122,13 +149,31 @@ def main():
 
         #Make a prediction for training set 
         y_pred = predict_output(opt_theta, x_training)
-        print y_pred
+        # print y_pred
 
-        print "Success rate training " + str(np.sum(y_training == y_pred)/float(y_training.size))
+        # print "number of correct training pred " + str(np.sum(y_training == y_pred))
+        # print y_training.shape
+        # print y_pred.shape
+        # print "number of validation size " + str(y_training.size)
+        # print "Success rate training " + str(np.sum(y_training == y_pred)/float(y_training.size))
 
         #Make a prediction for validation set
-        y_pred = predict_output(opt_theta, x_validation)
-        print y_pred
+        y_pred2 = predict_output(opt_theta, x_validation)
+        # print y_pred2
 
-        print "Success rate testing " + str(np.sum(y_validation == y_pred)/float(y_validation.size))
+        # print "number of correct testing pred " + str(np.sum(y_validation == y_pred2))
+        y_validation = np.reshape(y_validation, y_validation.shape[0], 1)
+        # print y_validation.shape
+        # print y_pred2.shape
+        # print "number of validation size " + str(y_validation.size)
+        # print "Success rate testing " + str(np.sum(y_validation == y_pred2)/float(y_validation.size))
+
+        trainingScore.append(np.sum(y_training == y_pred)/float(y_training.size))
+        validationScore.append(np.sum(y_validation == y_pred2)/float(y_validation.size))
+        optimalThetas.append(opt_theta)
+
+    #print averages
+    print "optimal mean theta " +str(np.mean(optimalThetas))
+    print "mean training score " + str(np.mean(trainingScore))
+    print "mean validation score " + str(np.mean(validationScore))
 main()
