@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import re
+import math
 
 '''
 Form of raw event:
@@ -40,6 +41,7 @@ Headers.averageNon2015FullMMTime = "average_non_2015_full_mm_time"
 Headers.averageNon2012FullMMTime = "average_non_2012_full_mm_time"
 # Binary, whether participated in 2015 MM (only Marathon event type)
 Headers.participatedIn2015FullMM = "participated_in_2015_full_mm"
+Headers.logNon2015MarathonRatio = "log_non_2015_marathon_ratio"
 
 Events = BetterDict()
 Events.marathon = "marathon"

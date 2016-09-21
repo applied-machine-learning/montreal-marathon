@@ -90,6 +90,11 @@ def makeParticipant(partID, eventList):
     dat[Headers.averageNon2015FullMMTime] = averageTime(eventsExceptYear(fullMMs, 2015))
     dat[Headers.averageNon2012FullMMTime] = averageTime(eventsExceptYear(fullMMs, 2012))
 
+    if dat[Headers.averageNon2015MarathonTime] == 0:
+        dat[Headers.logNon2015MarathonRatio] = 0
+    else:
+        dat[Headers.logNon2015MarathonRatio] = math.log(dat[Headers.numberOfNon2015Marathons] / dat[Headers.averageNon2015MarathonTime])
+
     return Participant(partID, dat)
 
 class Participant:
