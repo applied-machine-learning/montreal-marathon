@@ -41,6 +41,9 @@ Headers.averageNon2015FullMMTime = "average_non_2015_full_mm_time"
 Headers.averageNon2012FullMMTime = "average_non_2012_full_mm_time"
 # Binary, whether participated in 2015 MM (only Marathon event type)
 Headers.participatedIn2015FullMM = "participated_in_2015_full_mm"
+Headers.participatedIn2014FullMM = "participated_in_2014_full_mm"
+Headers.participatedIn2013FullMM = "participated_in_2013_full_mm"
+Headers.participatedIn2012FullMM = "participated_in_2012_full_mm"
 Headers.logNon2015MarathonRatio = "log_non_2015_marathon_ratio"
 Headers.MM2015Time = "montrealMarathon2015Time"
 
