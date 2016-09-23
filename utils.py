@@ -46,7 +46,8 @@ Headers.participatedIn2013FullMM = "participated_in_2013_full_mm"
 Headers.participatedIn2012FullMM = "participated_in_2012_full_mm"
 Headers.logNon2015MarathonRatio = "log_non_2015_marathon_ratio"
 Headers.MM2015Time = "montrealMarathon2015Time"
-
+Headers.marathonCompletionRate = "marathon completion rate"
+Headers.montrealMarathonCompletionRate = "montreal marathon completion rate"
 Events = BetterDict()
 Events.marathon = "marathon"
 

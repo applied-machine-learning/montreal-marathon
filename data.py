@@ -173,21 +173,46 @@ def loadCSV(filename):
 def parseRaw(rawEntries):
     dataset = {}
     i = 1
+    marathonZeroedTimes = []
+    montrealMarathonZeroedTimes = []
     while i < len(rawEntries):
         row = rawEntries[i]
         partID = int(row[0])
         ungroupedEvents = row[1:]
         events = toEventList(ungroupedEvents)
-        dataset[partID] = makeParticipant(partID, events)
+        participant = makeParticipant(partID, events)
+        # Check for zero values of time and other values that
+        # don't make sense CONTINUE FROM HERE
+        dataset[partID] = participant
+        if participant.getField(Headers.averageMarathonTime) == 0:
+            marathonZeroedTimes.append(participant.id)
+        if participant.getField(Headers.averageFullMMTime) == 0:
+            montrealMarathonZeroedTimes.append(participant.id)
         i += 1
 
+    marathonAverageTimes = \
+            [p.getField(Headers.averageMarathonTime)
+                    for p in dataset.values()
+                    if p.getField(Headers.averageMarathonTime) != 0]
+    montrealMarathonAverageTimes = \
+            [p.getField(Headers.averageFullMMTime)
+                for p in dataset.values()
+                if p.getField(Headers.averageFullMMTime) != 0]
+
+    datasetAverageMarathonTime = mean(marathonAverageTimes)
+    datasetAverageMMTime = mean(montrealMarathonAverageTimes)
+
+    for key in marathonZeroedTimes:
+        dataset[key].data[Headers.averageMarathonTime] = datasetAverageMarathonTime
+    for key in montrealMarathonZeroedTimes:
+        dataset[key].data[Headers.averageFullMMTime] = datasetAverageMMTime
+
+            
     return dataset
 
 if __name__ == "__main__":
     # Load raw data as list
     raw = loadCSV("raw_data/Project1_data.csv")
     dataset = MarathonDataset(raw)
-    for k, v in dataset.getAllData().iteritems():
-        v.prettyPrint()
-    d = dataset.request([Headers.ID, Headers.gender, Headers.age, Headers.totalEvents, Headers.participatedIn2015FullMM, Headers.averageMarathonTime, Headers.averageNon2015MarathonTime, Headers.numberOfFullMMs, Headers.numberOfNon2015FullMMs, Headers.averageFullMMTime, Headers.averageNon2015FullMMTime])
+    d = dataset.request([Headers.numberOfMarathons, Headers.averageMarathonTime, Headers.numberOfFullMMs, Headers.averageFullMMTime])
     print d
