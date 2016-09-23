@@ -3,41 +3,16 @@ import math
 from math import e
 from utils import *
 from data import *
-import numpy as np
 import scipy.stats as sp
-from sklearn import datasets
-from sklearn.naive_bayes import GaussianNB
-#this function is used to compare performance to a library. It is not used in the BayesPredict.py from which the final predictions is generated.
-def auto_eval(dataset,test_set):
-    gnb = GaussianNB()
-    X=[]
-    Y=[]
-    testX=[]
-    testY=[]
-    for i in dataset:
-        X.append([i[2],i[3]])
-        Y.append([i[5]])
-    for i in test_set:
-        testX.append([i[2],i[3]])
-#    print X
- #   print Y
-   # newX=np.array(X)
-    #newY=np.array(Y)
-    gnb.fit(X,Y)
-    y_pred = gnb.predict(testX)
-    #print y_pred
-    botsol=[]
-    for j in range(len(y_pred)):
-        k=[test_set[j][0],y_pred[j]]
-        botsol.append(k)
-   # print botsol
-    return botsol
+import numpy as np
+#This script returns the predictions for 2016
+
 ##############   UTILITY FUNCTIONS    ###################
 #Utility function to square age column ; age squared punishes older runners
 def square_age(dataset):
     for i in (dataset):
         i[1]=math.pow(i[1],2)
-        #used for binning ages
+
         #if i[1] in range(0,25):
          #   i[1]=0.1
         #elif i[1] in range(25,35):
@@ -58,7 +33,7 @@ def get_p_y(dataset):
     n=0
     for i in dataset:
         #Probability to run in 2015 is in the fifth column of the data.
-        if i[4]==1:
+        if i[5]==1:
             x+=1
             n+=1
         else:
@@ -125,26 +100,26 @@ def load_data():
     for i in d:
         if i[2]==0 and i[3]==0:
             d.remove(i)
- #   print "size",str(len(d))
+    print "size",str(len(d))
     k=[]
-    for i in d:
-        k.append(i[4])
-    print k
     return d
-#ratio is the percentage of the dataset kept as test set
-def separateData(dataset, ratio):
-    size = ratio * len(dataset)
-    test_set = []
-    training_set = list(dataset)
-    #a random datapoint is taken in the set, removed from the training set and added to test set
-    #this is repeated until test set size is satisfied.
-    while len(test_set) < size:
-        datapoint = random.randrange(len(training_set))
-        test_set.append(training_set.pop(datapoint))
-       # for x in training_set:
-       #     test_set.append(training_set.pop(x))
-    return training_set, test_set
-#separates the data by class and returns mean and stdev(if relevant) for each feature in each class
+
+#This function grabs the 2013-2015 period in the data to predict 2016.
+def get_test_set():
+    raw = loadCSV("../raw_data/Project1_data.csv")
+    dataset = MarathonDataset(raw)
+    #same matrix form as seen previously
+    d = dataset.request([Headers.ID, Headers.age, Headers.numberOfNon2012Marathons,Headers.numberOfNon2012FullMMs, Headers.gender,Headers.participatedIn2015FullMM ])
+    #People who have never run a marathon are not considered part of the dataset for marathonians.
+    rest_of_predictions = []
+    for i in d:
+        if i[2]==0 and i[3]==0:
+            rest_of_predictions.append((i[0],0))
+            d.remove(i)
+    print d[0]
+    return(d,rest_of_predictions)
+
+#separates the learning data by class and returns mean and stdev(if relevant) for each feature in each class
 def normal_values(dataset):
     #dictionary to store classes
     classes = {}
@@ -172,19 +147,21 @@ def normal_values(dataset):
 #This method takes as input  the data separated in classes, an input row, and P(Y)
 #It evaluates the likelihood of this input row to be in either class
 def computeClasslikelihood(show_data, input_row, p_y):
+  #  print input_row
     loglikelihood = {}
     for classID, class_data in show_data.iteritems():
         #loglik is initiated at 0
         loglikelihood[classID] = 0
         #the 1st feature, ID, is not used as a feature but a tracking tool.
         for i in(0,1,2,3,4):
-            #The first 4 features are continuous and follow one process.
+            #The first 4 features are continuous and follow one process. Only the 3rd feature, n montreal marathons is used here
             if i == (3):
                 mean = float(class_data[i][0])
                 getlambda = float(class_data[i][1])
+               # print input_row[i]
                 x = float(input_row[i])
                 loglikelihood[classID] += math.log(computeNormProb(x, mean, getlambda),e)
-            #discrete features come after in the input matrix.
+            #discrete features come after in the input matrix. Only gender is used here
             elif (i==4):
                 x = input_row[i]
 
@@ -227,74 +204,39 @@ def getpredictions(show_data, test_set, p_y):
     print float(nunder)/(float(nunder)+float(nover))
     return predictions
 
-#Takes as input the initial dataset and a set of predictions, and scores the predictions
-def Score2015(dataset,predictions):
-    tp=0
-    tn=0
-    fp=0
-    fn=0
-    participants = []
-    #returns a list of the 2015 Montreal Marathon participants
-    for j in dataset:
-        if j[5]==1:
-            participants.append(j)
-    data = [[column] for column in zip(*participants)]
-    runners2015= data[0]
 
-    #Identifies true/false positive/negatives
-    for id in predictions:
-        #true positives
-        if id[1]==1 and id[0] in runners2015[0]:
-            tp+=1
-        #true negatives
-        elif id[1]==0 and id[0] not in runners2015[0]:
-            tn+=1
-        #false positives
-        elif id[1]==0 and id[0] in runners2015[0]:
-            fn+=1
-        #false negatives
-        elif id[1]==1 and id[0] not in runners2015[0]:
-            fp+=1
-        else :
-            print "ERROR"
-    #returns prediction error
-    print "true positives",str(tp), str(float(tp/float(tp+tn+fp+fn)))
-    print "true negatives", str(tn), str(float(tn/float(tp+tn+fp+fn)))
-    print "false positives", str(fp), str(float(fp/float(tp+tn+fp+fn)))
-    print "false negatives", str(fn), str(float(fn/float(tp+tn+fp+fn)))
-    print "sensitivity", str(tp/float(tp+fn+1))
-    print "specificity", str(tn/float(fn+tn+1))
-    return ((tp+tn) / float(fn+fp+tp+tn) )* 100.0
 def main():
-    #10% of the dataset it separated for testing
-    ratio = 0.000
     #load dataset
     dataset = load_data()
     dataset=square_age(dataset)
     #separate data
-    training_set, test_set = separateData(dataset, ratio)
+    training_set=dataset
 
 #    auto_results= auto_eval(training_set,test_set)
-
+    test_set, rest_of_predictions = get_test_set()
     #estimate P(Y)
-    p_y = (get_p_y(dataset)-0)
+    p_y = (get_p_y(test_set))
     #Obtain normal values for each feature (column)
     show_data = normal_values(training_set)
     print show_data
-    #gets predictions for the training set
-    predictions = getpredictions(show_data, training_set, p_y)
-    #score them
-    accuracy = Score2015(dataset, predictions)
-    print  str(accuracy)
-    #get predictions for the test set
-   # show_data2 = normal_values(training_set)
-  #  predictions = getpredictions(show_data2, test_set, p_y)
-    #score them
-  #  accuracy2 = Score2015(test_set, predictions)
-    #output
+    #gets the test set.
 
-  #  print str(accuracy2)
-
-  #  print Score2015(test_set,auto_results)
-#
+    #gets predictions for the test
+    predictions = getpredictions(show_data, test_set, p_y)
+    #This manages the data for non_marathonians. Since the project is strictly on people who run the marathons, people who are in the dataset because they participate to some other race are just as likely to run a marathon as someone who isn't in the dataset, and can't be used to learn accurately. In this case, we will simply return a prediction of 0 for them.
+    not_marathonian=0
+    for i in rest_of_predictions:
+        if i[0] not in predictions:
+            predictions.append(i)
+            not_marathonian+=1
+    print predictions
+    counter=0
+    tot =0
+    for k in predictions:
+        if k[1]==1:
+            counter+=1
+            tot+=1
+        else:
+            tot+=1
+    print counter,tot, not_marathonian
 main()
