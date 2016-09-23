@@ -16,7 +16,7 @@ class BetterDict(dict):
         return vars(self)[k]
 
 Names = BetterDict()
-Names.montrealMarathon = ["montreal", "oasis", "marathon"]
+Names.montrealMarathon = ["oasis", "marathon"]
 
 Headers = BetterDict()
 Headers.ID = "participant_id"
@@ -148,7 +148,7 @@ def averageTime(raw):
 # Input: event
 # Output: list of words in the event name
 def eventWords(ev):
-    return re.findall(r"[a-z0-9]+", ev.name)
+    return re.findall(r"[\-a-z0-9]+", ev.name)
 
 def match(names, event):
     words = eventWords(event)

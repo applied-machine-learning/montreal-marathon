@@ -214,5 +214,5 @@ if __name__ == "__main__":
     # Load raw data as list
     raw = loadCSV("raw_data/Project1_data.csv")
     dataset = MarathonDataset(raw)
-    d = dataset.request([Headers.numberOfMarathons, Headers.averageMarathonTime, Headers.numberOfFullMMs, Headers.averageFullMMTime])
+    d = dataset.request([Headers.participatedIn2012FullMM])
     print d
