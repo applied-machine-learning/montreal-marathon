@@ -43,6 +43,9 @@ Important:
 [x] mm_2015_time
 [x] logNon2015MarathonRatio
 
+[ ] % of completed marathons
+[ ] % of completed montreal marathons
+
 Unimportant:
 [ ] number_of_half-marathons
 [ ] average_half-marathon_time
@@ -138,7 +141,12 @@ class MarathonDataset:
     # self.columns : List of strings which are the headers of the raw data.
     # self.data : dictionary mapping participant_IDs to Participants.
     def __init__(self, rawList):
-        self.data = parseRaw(rawList)
+        self.data, allMarathonParts, non2015MarathonParts, allMMParts, non2015MMParts = parseRaw(rawList)
+
+        self.montrealMarathonParticipants = allMMParts
+        self.non2015MontrealMarathonParticipants = non2015MMParts
+        self.marathonParticipants = allMarathonParts
+        self.non2015MarathonParticipants = non2015MarathonParts
         # self.columns = IMPLEMENTED_HEADERS
 
     def getColumns(self):
@@ -151,11 +159,14 @@ class MarathonDataset:
     # in the order requested.
     # To index: matrix[0][1] will return the element
     # in the 0th row, and the 1st column
-    def request(self, fields):
+    def request(self, fields, ids=None):
         matrix = []
         for field in fields:
             assert field in Headers.values()
         for id, participant in self.data.iteritems():
+            if ids != None:
+                if id not in ids:
+                    continue
             row = []
             for field in fields:
                 row.append(participant.getField(field))
@@ -175,12 +186,15 @@ def parseRaw(rawEntries):
     i = 1
     marathonZeroedTimes = []
     montrealMarathonZeroedTimes = []
-
     non2015marathonZeroedTimes = []
-
     non2015montrealMarathonZeroedTimes = []
-
     mm2015ZeroedTimes = []
+
+    invMarathonZeroedTimes = []
+    invMontrealMarathonZeroedTimes = []
+    invNon2015marathonZeroedTimes = []
+    invNon2015montrealMarathonZeroedTimes = []
+    invMm2015ZeroedTimes = []
 
     while i < len(rawEntries):
         row = rawEntries[i]
@@ -194,21 +208,33 @@ def parseRaw(rawEntries):
 
         if participant.getField(Headers.averageMarathonTime) == 0:
             marathonZeroedTimes.append(participant.id)
+        else:
+            invMarathonZeroedTimes.append(participant.id)
 
         if participant.getField(Headers.averageFullMMTime) == 0:
             montrealMarathonZeroedTimes.append(participant.id)
+        else:
+            invMontrealMarathonZeroedTimes.append(participant.id)
 
         if participant.getField(Headers.averageNon2015MarathonTime) == 0:
             non2015marathonZeroedTimes.append(participant.id)
+        else:
+            invNon2015marathonZeroedTimes.append(participant.id)
 
         if participant.getField(Headers.averageNon2015FullMMTime) == 0:
             non2015montrealMarathonZeroedTimes.append(participant.id)
+        else:
+            invNon2015montrealMarathonZeroedTimes.append(participant.id)
             
         if participant.getField(Headers.averageNon2015FullMMTime) == 0:
             non2015montrealMarathonZeroedTimes.append(participant.id)
+        else:
+            invNon2015montrealMarathonZeroedTimes.append(participant.id)
 
         if participant.getField(Headers.MM2015Time) == 0:
             mm2015ZeroedTimes.append(participant.id)
+        else:
+            invMm2015ZeroedTimes.append(participant.id)
 
         i += 1
 
@@ -234,26 +260,31 @@ def parseRaw(rawEntries):
                     for p in dataset.values()
                     if p.getField(Headers.MM2015Time) != 0]
 
-    datasetAverageMarathonTime = mean(marathonAverageTimes)
-    datasetAverageMMTime = mean(montrealMarathonAverageTimes)
-    datasetNon2015AverageMarathonTime = mean(non2015MarathonTimes)
-    datasetNon2015AverageFullMMTime = mean(non2015FullMMTimes)
+    datasetMaximumMarathonTime = maximum(marathonAverageTimes)
+    datasetMaximumMMTime = maximum(montrealMarathonAverageTimes)
+    datasetNon2015MaximumMarathonTime = maximum(non2015MarathonTimes)
+    datasetNon2015MaximumFullMMTime = maximum(non2015FullMMTimes)
 
-    datasetAverage2015MMTime = mean(mm2015Times)
+    # datasetMaximumMarathonTime = mean(marathonAverageTimes)
+    # datasetMaximumMMTime = mean(montrealMarathonAverageTimes)
+    # datasetNon2015MaximumMarathonTime = mean(non2015MarathonTimes)
+    # datasetNon2015MaximumFullMMTime = mean(non2015FullMMTimes)
+
+    datasetMaximum2015MMTime = maximum(mm2015Times)
 
     for key in marathonZeroedTimes:
-        dataset[key].data[Headers.averageMarathonTime] = datasetAverageMarathonTime
+        dataset[key].data[Headers.averageMarathonTime] = datasetMaximumMarathonTime
     for key in montrealMarathonZeroedTimes:
-        dataset[key].data[Headers.averageFullMMTime] = datasetAverageMMTime
+        dataset[key].data[Headers.averageFullMMTime] = datasetMaximumMMTime
 
     for key in non2015marathonZeroedTimes:
-        dataset[key].data[Headers.averageNon2015MarathonTime] = datasetNon2015AverageMarathonTime
+        dataset[key].data[Headers.averageNon2015MarathonTime] = datasetNon2015MaximumMarathonTime
     for key in non2015montrealMarathonZeroedTimes:
-        dataset[key].data[Headers.averageNon2015FullMMTime] = datasetNon2015AverageFullMMTime
+        dataset[key].data[Headers.averageNon2015FullMMTime] = datasetNon2015MaximumFullMMTime
     for key in mm2015ZeroedTimes:
-        dataset[key].data[Headers.MM2015Time] = datasetAverage2015MMTime
+        dataset[key].data[Headers.MM2015Time] = datasetMaximum2015MMTime
             
-    return dataset
+    return dataset, invMarathonZeroedTimes, invNon2015marathonZeroedTimes, invMontrealMarathonZeroedTimes, invNon2015montrealMarathonZeroedTimes
 
 if __name__ == "__main__":
     # Load raw data as list

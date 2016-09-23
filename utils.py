@@ -166,6 +166,15 @@ def filterByName(evs, name):
             candidates.append(ev)
     return candidates
 
+def maximum(l):
+    if len(l) == 0:
+        return None
+    i = l[0]
+    for elem in l:
+        if elem > i:
+            i = elem
+    return i
+
 # Input : name of ev, type of ev, year of ev, and list of events
 # Returns: time of event if it exists. None if it doesn't
 def getTime(name, type, year, eventList):
