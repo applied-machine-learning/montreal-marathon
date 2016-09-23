@@ -24,7 +24,7 @@ def gradient(theta, x, y):
 def cost_function(theta, x, y):
     term1 = y * np.log(sigmoid(theta,x))
     term2 = (1-y) * np.log(1 - sigmoid(theta,x))
-    Jm = -term1 - term2
+    Jm = -term1 - term2 
     return np.mean(Jm)
 
 
@@ -66,17 +66,27 @@ def predict_output(theta, X, prob_threshold = 0.5):
 def getData():
 
     raw = loadCSV("raw_data/Project1_data.csv")
-    mdata = MarathonDataset(raw)
-    listOutputs = [Headers.participatedIn2015FullMM]
-    listInputs = [ Headers.numberOfNon2015Marathons, Headers.averageNon2015MarathonTime, Headers.age, Headers.gender]
-    y = mdata.request(listOutputs)
-    X = mdata.request(listInputs)
     
-
-    # for i in range (len(X[0])):
-    #     if X[i][0] == 0:
-    #         X[i][1] = 100000000
+    
+    mdata = MarathonDataset(raw)
+    participants = mdata.montrealMarathonParticipants
+    listOutputs = [Headers.participatedIn2015FullMM]
+    listInputs = [ Headers.numberOfNon2015Marathons, Headers.averageNon2015MarathonTime]
+    y = mdata.request(listOutputs, ids = participants)
+    X = mdata.request(listInputs, ids = participants)
     return X,y, listInputs
+
+
+
+def getTestData():
+
+    raw = loadCSV("raw_data/Project1_data.csv")
+    mdata = MarathonDataset(raw)
+    participants = mdata.montrealMarathonParticipants
+    listInputs = [ Headers.numberOfNon2012Marathons, Headers.averageNon2012MarathonTime]
+    X= mdata.request(listInputs, ids = participants)
+
+    return X, participants
 
 
 # Linear regression with k-fold cross validation
@@ -91,6 +101,9 @@ def main():
     ###convert list to numpty array
     X = np.asarray(X);
     y = np.asarray(y);
+
+    print "1s in y"
+    print(np.sum(y))
 
     #Ensure Data is what you want
     print X.shape
@@ -120,6 +133,10 @@ def main():
     validationScore = []
     optimalThetas = []
     predictions = []
+    false_pos = []
+    false_neg = []
+    true_pos = []
+    true_neg = []
 
     for i in range(K):
         #Get the validation set ouputs and inputs
@@ -176,15 +193,39 @@ def main():
         optimalThetas.append(opt_theta)
         predictions.append(np.sum(y_pred2))
 
+        fp = 0;
+        fn = 0;
+        tp = 0;
+        tn = 0;
+        for k in range (y_pred2.shape[0]):
+            if y_pred2[k] == 0:
+                if y_validation[k] == 0:
+                    tn+=1
+                else:
+                    fn+=1
+            else:
+                if y_validation[k] == 1:
+                    tp+=1
+                else:
+                    fp+=1
+        false_neg.append(fn)
+        false_pos.append(fp)
+        true_neg.append(tn)
+        true_pos.append(tp)
+
     #print averages
     print "optimal mean thetas" +str(np.mean(optimalThetas , axis = 0))
     print "mean training score " + str(np.mean(trainingScore))
     print "mean validation score " + str(np.mean(validationScore))
     print "number of 1s predicted" + str(np.sum(predictions))
     print "number of 1s actually" + str(np.sum(y))
+    print "true negatives" + str(np.sum(true_neg))
+    print "false negatives" + str(np.sum(false_neg))
+    print "true positive" + str(np.sum(true_pos))
+    print "false positives" + str(np.sum(false_pos))
 
 
-    output_list = [X.shape[1]-1, np.mean(trainingScore), np.mean(validationScore), listInputs , np.var(validationScore), K, np.mean(optimalThetas, axis = 1)]
+    output_list = [X.shape[1]-1, np.mean(trainingScore), np.mean(validationScore), listInputs , np.var(validationScore), K, np.mean(optimalThetas, axis = 0)]
     #Open file
     with open('results_logistic.csv', 'a') as csvfile:
         wr = csv.writer(csvfile, delimiter = ',', quotechar = '|', quoting = csv.QUOTE_MINIMAL)
@@ -192,5 +233,31 @@ def main():
 
 
     #Now make predictions for 2016. 
+    X_prime, participants = getTestData()
+    X_prime = np.asarray(X_prime)
+
+    X_prime = (X_prime - np.mean(X_prime, axis=0)) / np.std(X_prime, axis=0)
+    print X_prime.size
+    print X_prime.shape
+    num_samples = X_prime.shape[0]
+    print num_samples
+    X_prime = np.c_[ np.ones(num_samples), X_prime] 
+    thetas_prime =   np.mean(optimalThetas, axis = 0)
+    thetas_prime = np.asarray(thetas_prime)
+    print thetas_prime
+    print thetas_prime.shape
+    y_2016 = predict_output(thetas_prime, X_prime)
+    print y_2016.shape
+    output_list_2 = [y_2016]
+    with open('2016_predictions_logistic.csv', 'wb') as csvfile:
+        wr = csv.writer(csvfile, delimiter = ',', quotechar = '|', quoting = csv.QUOTE_MINIMAL)
+        wr.writerow(["PARTICIPANT_ID", "Y_LOGISTIC"])
+        j = 0;
+        for i in range(0, 8711):
+            if i not in participants:
+                wr.writerow([i, 0])
+            else:
+                wr.writerow([i, y_2016[j]])
+                j+=1
 
 main()
