@@ -11,7 +11,9 @@ def run():
     '''
     headers = [Headers.gender, Headers.age, Headers.averageNon2015FullMMTime]
 
-    inputs = np.matrix(dataset.request(headers))
+    raw = dataset.request(headers)
+
+    inputs = np.matrix(raw)
     inputs = np.insert(inputs, 3, 1, axis=1)
 
     outputs = np.matrix(dataset.request([Headers.MM2015Time]))
@@ -23,11 +25,13 @@ def run():
     err = outputs - predictions
 
     sse = np.transpose(err) * err
+
+    averageErrPerEntry = math.sqrt(sse / len(raw))
     
-    print weights
-    print predictions
     print outputs
+    print predictions
     print sse
+    print averageErrPerEntry
 
 if __name__ == "__main__":
     run()
