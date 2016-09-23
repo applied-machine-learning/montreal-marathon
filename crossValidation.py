@@ -8,7 +8,7 @@ def randomize_input(X,y):
 	print combined.shape
 	random.shuffle(combined)
 
-	return combined[: , [0, combined.shape[1]-2] ], combined[: , combined.shape[1] -1 ]
+	return combined[: , [0, combined.shape[1]-1] ], combined[: , combined.shape[1] -1 ]
 
 class CrossValidation:
 

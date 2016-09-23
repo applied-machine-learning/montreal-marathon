@@ -9,7 +9,10 @@ from data import MarathonDataset
 from utils import *
 import csv
 
-K = 7
+K = 10
+
+#The functions relating to logistic regression were written using the class notes and 
+#the following webpage: http://aimotion.blogspot.ca/2011/11/machine-learning-with-python-logistic.html
 
 #returns sigmoid function which is the hypothesis for logistic regression
 def sigmoid(theta, x):
@@ -29,7 +32,7 @@ def cost_function(theta, x, y):
 
 
 #Implements gradient descent method to find the parameters theta giving minimum cost
-def gradient_descent(theta, X, y, learning_rate=.001, delta=.001, max_iter = 10000):
+def gradient_descent(theta, X, y, learning_rate=.00001, delta=.00001, max_iter = 10000):
 
     #Use the cost function to find the current cost for the initial theta values (zeros)
     cost = cost_function(theta, X, y)
@@ -45,7 +48,7 @@ def gradient_descent(theta, X, y, learning_rate=.001, delta=.001, max_iter = 100
 
         delta_cost = old_cost - cost
         i+=1
-    return theta
+    return theta, cost
 
 #Predict the value of y by using the sigmoid function on the optimal theta dot X and checking if its over 
 # the threshold for prediction yi = 1
@@ -77,7 +80,7 @@ def getData():
     return X,y, listInputs
 
 
-
+#Returns the test data for 2016 predictions
 def getTestData():
 
     raw = loadCSV("raw_data/Project1_data.csv")
@@ -89,14 +92,9 @@ def getTestData():
     return X, participants
 
 
-# Linear regression with k-fold cross validation
+# Logistic regression with k-fold cross validation
 def main():
 
-    ################## SAMPLE DATA TO TEST, NEEDS TO BE REPLACED WITH OUR OWN #############################
-    #data = datasets.load_iris()
-    #X = data.data[:100, :2]
-    #y = data.target[:100]
-    #######################################################################################################
     X,y, listInputs = getData();
     ###convert list to numpty array
     X = np.asarray(X);
@@ -142,14 +140,7 @@ def main():
         #Get the validation set ouputs and inputs
         x_validation = partitioned_x[i]
         y_validation = partitioned_y[i]
-        #Determine the size of the np object
-        # num_cols_x, num_cols_y , num_rows_x, num_rows_y = 0
-        # for s in range(7):
-        #     if j!=i:
-        #         num_cols_x += partitioned_x[s].shape[1]
-        #         num_rows_x += partitioned_x[s].shape[0]
-        #         num_cols_y += partitioned_y[s].shape[1]
-        #         num_rows_y += partitioned_y[s].shape[0]
+
         #Get the training set features
         y_training = np.empty(shape = (0, 0))
         x_training = np.empty(shape = (0, 0))
@@ -159,40 +150,25 @@ def main():
                 y_training = np.append(y_training, partitioned_y[j])
 
         x_training = np.reshape(x_training, ( y_training.shape[0], X.shape[1]))
-        # print "shape of x_validation" + str(x_validation.shape)
-        # print "shape of y_validation" + str(y_validation.shape)
-        # print "shape of x_training" + str(x_training.shape)
-        # print "shape of y_training" + str(y_training.shape)
+
         #Get the final thetas from training set
-        opt_theta = gradient_descent(thetas, x_training, y_training)
-        print(opt_theta)
+        opt_theta, swerg = gradient_descent(thetas, x_training, y_training)
 
         #Make a prediction for training set 
         y_pred = predict_output(opt_theta, x_training)
-        # print y_pred
 
-        # print "number of correct training pred " + str(np.sum(y_training == y_pred))
-        # print y_training.shape
-        # print y_pred.shape
-        # print "number of validation size " + str(y_training.size)
-        # print "Success rate training " + str(np.sum(y_training == y_pred)/float(y_training.size))
 
         #Make a prediction for validation set
         y_pred2 = predict_output(opt_theta, x_validation)
-        # print y_pred2
 
-        # print "number of correct testing pred " + str(np.sum(y_validation == y_pred2))
         y_validation = np.reshape(y_validation, y_validation.shape[0], 1)
-        # print y_validation.shape
-        # print y_pred2.shape
-        # print "number of validation size " + str(y_validation.size)
-        # print "Success rate testing " + str(np.sum(y_validation == y_pred2)/float(y_validation.size))
 
         trainingScore.append(np.sum(y_training == y_pred)/float(y_training.size))
         validationScore.append(np.sum(y_validation == y_pred2)/float(y_validation.size))
         optimalThetas.append(opt_theta)
         predictions.append(np.sum(y_pred2))
 
+        #Get confusion matrix
         fp = 0;
         fn = 0;
         tp = 0;
@@ -219,10 +195,10 @@ def main():
     print "mean validation score " + str(np.mean(validationScore))
     print "number of 1s predicted" + str(np.sum(predictions))
     print "number of 1s actually" + str(np.sum(y))
-    print "true negatives" + str(np.sum(true_neg))
-    print "false negatives" + str(np.sum(false_neg))
-    print "true positive" + str(np.sum(true_pos))
-    print "false positives" + str(np.sum(false_pos))
+    print "true negatives" + str(np.sum(true_neg)/float(num_samples))
+    print "false negatives" + str(np.sum(false_neg)/float(num_samples))
+    print "true positive" + str(np.sum(true_pos)/float(num_samples))
+    print "false positives" + str(np.sum(false_pos)/float(num_samples))
 
 
     output_list = [X.shape[1]-1, np.mean(trainingScore), np.mean(validationScore), listInputs , np.var(validationScore), K, np.mean(optimalThetas, axis = 0)]
