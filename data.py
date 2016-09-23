@@ -175,6 +175,13 @@ def parseRaw(rawEntries):
     i = 1
     marathonZeroedTimes = []
     montrealMarathonZeroedTimes = []
+
+    non2015marathonZeroedTimes = []
+
+    non2015montrealMarathonZeroedTimes = []
+
+    mm2015ZeroedTimes = []
+
     while i < len(rawEntries):
         row = rawEntries[i]
         partID = int(row[0])
@@ -184,10 +191,25 @@ def parseRaw(rawEntries):
         # Check for zero values of time and other values that
         # don't make sense CONTINUE FROM HERE
         dataset[partID] = participant
+
         if participant.getField(Headers.averageMarathonTime) == 0:
             marathonZeroedTimes.append(participant.id)
+
         if participant.getField(Headers.averageFullMMTime) == 0:
             montrealMarathonZeroedTimes.append(participant.id)
+
+        if participant.getField(Headers.averageNon2015MarathonTime) == 0:
+            non2015marathonZeroedTimes.append(participant.id)
+
+        if participant.getField(Headers.averageNon2015FullMMTime) == 0:
+            non2015montrealMarathonZeroedTimes.append(participant.id)
+            
+        if participant.getField(Headers.averageNon2015FullMMTime) == 0:
+            non2015montrealMarathonZeroedTimes.append(participant.id)
+
+        if participant.getField(Headers.MM2015Time) == 0:
+            mm2015ZeroedTimes.append(participant.id)
+
         i += 1
 
     marathonAverageTimes = \
@@ -198,15 +220,38 @@ def parseRaw(rawEntries):
             [p.getField(Headers.averageFullMMTime)
                 for p in dataset.values()
                 if p.getField(Headers.averageFullMMTime) != 0]
+    non2015MarathonTimes = \
+            [p.getField(Headers.averageNon2015MarathonTime)
+                    for p in dataset.values()
+                    if p.getField(Headers.averageNon2015MarathonTime) != 0]
+    non2015FullMMTimes = \
+            [p.getField(Headers.averageNon2015FullMMTime)
+                    for p in dataset.values()
+                    if p.getField(Headers.averageNon2015FullMMTime) != 0]
+
+    mm2015Times = \
+            [p.getField(Headers.MM2015Time)
+                    for p in dataset.values()
+                    if p.getField(Headers.MM2015Time) != 0]
 
     datasetAverageMarathonTime = mean(marathonAverageTimes)
     datasetAverageMMTime = mean(montrealMarathonAverageTimes)
+    datasetNon2015AverageMarathonTime = mean(non2015MarathonTimes)
+    datasetNon2015AverageFullMMTime = mean(non2015FullMMTimes)
+
+    datasetAverage2015MMTime = mean(mm2015Times)
 
     for key in marathonZeroedTimes:
         dataset[key].data[Headers.averageMarathonTime] = datasetAverageMarathonTime
     for key in montrealMarathonZeroedTimes:
         dataset[key].data[Headers.averageFullMMTime] = datasetAverageMMTime
 
+    for key in non2015marathonZeroedTimes:
+        dataset[key].data[Headers.averageNon2015MarathonTime] = datasetNon2015AverageMarathonTime
+    for key in non2015montrealMarathonZeroedTimes:
+        dataset[key].data[Headers.averageNon2015FullMMTime] = datasetNon2015AverageFullMMTime
+    for key in mm2015ZeroedTimes:
+        dataset[key].data[Headers.MM2015Time] = datasetAverage2015MMTime
             
     return dataset
 
@@ -214,5 +259,5 @@ if __name__ == "__main__":
     # Load raw data as list
     raw = loadCSV("raw_data/Project1_data.csv")
     dataset = MarathonDataset(raw)
-    d = dataset.request([Headers.participatedIn2012FullMM])
+    d = dataset.request([Headers.averageFullMMTime])
     print d
